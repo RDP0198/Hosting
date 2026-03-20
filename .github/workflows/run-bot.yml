@@ -1,34 +1,46 @@
-name: Run 087 Bot
+name: Run Telegram Bot
 
 on:
-  workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: '0 */6 * * *'   # <-- Cron every 6 hours
+  workflow_dispatch:
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}
+      cancel-in-progress: true
     timeout-minutes: 360
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Run bot
-        env:
-          TOKEN: ${{ secrets.TOKEN }}
-          OWNER_ID: ${{ secrets.OWNER_ID }}
-          ADMIN_ID: ${{ secrets.ADMIN_ID }}
-          YOUR_USERNAME: ${{ secrets.YOUR_USERNAME }}
-          UPDATE_CHANNEL: ${{ secrets.UPDATE_CHANNEL }}
-        run: python 087.py
+    - name: Create necessary directories
+      run: |
+        mkdir -p upload_bots inf
+
+    - name: Run bot
+      env:
+        TOKEN: ${{ secrets.TOKEN }}
+        OWNER_ID: ${{ secrets.OWNER_ID }}
+        ADMIN_ID: ${{ secrets.ADMIN_ID }}
+        YOUR_USERNAME: ${{ secrets.YOUR_USERNAME }}
+        UPDATE_CHANNEL: ${{ secrets.UPDATE_CHANNEL }}
+        FREE_USER_LIMIT: ${{ secrets.FREE_USER_LIMIT }}
+        SUBSCRIBED_USER_LIMIT: ${{ secrets.SUBSCRIBED_USER_LIMIT }}
+        ADMIN_LIMIT: ${{ secrets.ADMIN_LIMIT }}
+        PORT: ${{ secrets.PORT || '8080' }}
+      run: |
+        python 087.py
